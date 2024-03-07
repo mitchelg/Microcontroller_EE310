@@ -7,27 +7,54 @@
 
     PSECT absdata,abs,ovrld
     
-    #define HEAT	PORTD,0
-    #define COOL	PORTD,1
+    #define heater	PORTD,1
+    #define cooler	PORTD,2
     
-    refTemp equ		20h
-    measuredTemp equ	21h
-    contReg equ		22h
-    
+    refTemp equ		0x20
+    measuredTemp equ	0x21
+    contReg equ		0x22
+ 
+
     ORG          0h
-    GOTO        _start1
+    GOTO        _start
     ORG          20h
     
  //Assigning hard-coded temperature values
- _start1:
-    MOVLW	40h
-    MOVWF	0x80,0
-    MOVLW	0x45
-    MOVWF	0x81,0
+ _start:
+    MOVLW	0b00000110	//Setting up PORTD as output for bits 1, 2
+    MOVWF	TRISD,0
+    MOVLW   45		//Values are in decimal, if no type is specified, decimal is assumed by default
+    MOVWF   refTemp,0
+    MOVLW   25
+    MOVWF   measuredTemp,0
+    GOTO    _compare
     
+    
+_compare:
+    MOVF    refTemp,W
+
+    CPFSLT	measuredTemp	    //Skip if F < W, aka measured < ref
+    GOTO	_heat	
+
+    CPFSGT	measuredTemp
+    GOTO	_cool
+    
+    
+_heat:
+    MOVLW   2h
+    MOVWF   contReg,0
+    MOVFF   contReg,PORTD
+    
+_cool:
+;    MOVLW   0x04
+;    MOVWF   0x50,0
+;    MOVWF   PORTD,0
+    BTG	    0x3FCD,1
+    
+    
+;    MOVWF   contReg,0
+
+    
+
 END
-
-
-
-
 
