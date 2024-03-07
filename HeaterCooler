@@ -19,17 +19,22 @@
     GOTO        _start
     ORG          20h
     
- //Assigning hard-coded temperature values
+    
  _start:
-    MOVLW	0b00000110	//Setting up PORTD as output for bits 1, 2
+    BANKSEL	PORTD
+    CLRF	PORTD		//Initializing  PORTD
+    BANKSEL	ANSELD
+    CLRF	ANSELD
+    BANKSEL	TRISD
+    MOVLW	0b00000000	//Setting up PORTD as output
     MOVWF	TRISD,0
-    MOVLW   45		//Values are in decimal, if no type is specified, decimal is assumed by default
-    MOVWF   refTemp,0
-    MOVLW   25
-    MOVWF   measuredTemp,0
-    GOTO    _compare
-    
-    
+    MOVLW	45		//Values are in decimal, if no type is specified, decimal is assumed by default
+    MOVWF	refTemp,0
+    MOVLW	25
+    MOVWF	measuredTemp,0
+    GOTO	_compare
+
+
 _compare:
     MOVF    refTemp,W
 
@@ -46,14 +51,9 @@ _heat:
     MOVFF   contReg,PORTD
     
 _cool:
-;    MOVLW   0x04
-;    MOVWF   0x50,0
-;    MOVWF   PORTD,0
-    BTG	    0x3FCD,1
-    
-    
-;    MOVWF   contReg,0
-
+    MOVLW   0x04
+    MOVWF   contReg,0
+    MOVFF   contReg,PORTD
     
 
 END
