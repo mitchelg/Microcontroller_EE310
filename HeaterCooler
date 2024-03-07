@@ -4,15 +4,13 @@
 //Initialization:
     #include "C:\Users\garre\Desktop\Library\8. School\5. Spring 2024\EE 310\Assignment 6 - Heater Cooler\HeaterCooler.X\AssemblyConfig.inc"
     #include <xc.inc>
-
-    PSECT absdata,abs,ovrld
     
-    #define heater	PORTD,1
-    #define cooler	PORTD,2
+    PSECT absdata,abs,ovrld
     
     refTemp equ		0x20
     measuredTemp equ	0x21
     contReg equ		0x22
+    delayLoop equ	0x50
  
 
     ORG          0h
@@ -36,7 +34,7 @@
 
 
 _compare:
-    MOVF    refTemp,W
+    MOVF	refTemp,W
 
     CPFSLT	measuredTemp	    //Skip if F < W, aka measured < ref
     GOTO	_heat	
@@ -44,17 +42,39 @@ _compare:
     CPFSGT	measuredTemp
     GOTO	_cool
     
+    GOTO	_off
+    
     
 _heat:
     MOVLW   2h
     MOVWF   contReg,0
     MOVFF   contReg,PORTD
+    GOTO    _delaySet
+    
     
 _cool:
-    MOVLW   0x04
+    MOVLW   4h
     MOVWF   contReg,0
     MOVFF   contReg,PORTD
+    GOTO    _delaySet
     
+    
+_off:
+    MOVLW   0h
+    MOVWF   contReg,0
+    MOVFF   contReg,PORTD
+    GOTO    _delaySet
+    
+    
+_delaySet:
+    MOVLW   0xFF
+    MOVWF   delayLoop
+
+    
+_delayRun:
+    DECFSZ  delayLoop
+    GOTO    _delayRun
+    GOTO    _compare
 
 END
 
