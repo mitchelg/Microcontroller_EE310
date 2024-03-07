@@ -1,0 +1,33 @@
+//This 
+
+    
+//Initialization:
+    #include "C:\Users\garre\Desktop\Library\8. School\5. Spring 2024\EE 310\Assignment 6 - Heater Cooler\HeaterCooler.X\AssemblyConfig.inc"
+    #include <xc.inc>
+
+    PSECT absdata,abs,ovrld
+    
+    #define HEAT	PORTD,0
+    #define COOL	PORTD,1
+    
+    refTemp equ		20h
+    measuredTemp equ	21h
+    contReg equ		22h
+    
+    ORG          0h
+    GOTO        _start1
+    ORG          20h
+    
+ //Assigning hard-coded temperature values
+ _start1:
+    MOVLW	40h
+    MOVWF	0x80,0
+    MOVLW	0x45
+    MOVWF	0x81,0
+    
+END
+
+
+
+
+
