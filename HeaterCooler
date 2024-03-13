@@ -13,6 +13,8 @@
 //  	V1.1: 3/7/24 - Added hard-coded temp values, added target labels for heating and cooling, revised initialization
 //	V1.2: 3/7/24 - Added PORTD initialization, cleaned up code
 //	V1.3: 3/7/24 - Added delay loop and "system off" state
+//	V1.3.1: 3/13/24 - Added project header
+//	V1.3.2: 3/13/24 - Debugging
 //-----------------------------
 
     
@@ -30,7 +32,7 @@
  
 
     ORG          0h
-    GOTO        _compare
+    GOTO        _start
     ORG          20h
     
     
@@ -42,9 +44,9 @@
     BANKSEL	TRISD
     MOVLW	0b00000000	//Setting up PORTD as output
     MOVWF	TRISD,0
-    MOVLW	45		//Values are in decimal, if no type is specified, decimal is assumed by default
+    MOVLW	25	//Values are in decimal, if no type is specified, decimal is assumed by default
     MOVWF	refTemp,0
-    MOVLW	25
+    MOVLW	2
     MOVWF	measuredTemp,0
     GOTO	_compare
 
@@ -53,10 +55,10 @@ _compare:
     MOVF	refTemp,W
 
     CPFSLT	measuredTemp	    //Skip if F < W, aka measured < ref
-    GOTO	_heat	
+    GOTO	_cool	
 
     CPFSGT	measuredTemp
-    GOTO	_cool
+    GOTO	_heat
     
     GOTO	_off
     
