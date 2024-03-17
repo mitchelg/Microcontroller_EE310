@@ -13,6 +13,7 @@
 // V1.0: Added comment header, initialization
 // V1.1: Added constants and definitions, organization
 // V2.1: Added pressed-button behavior, value comparisons, more initialization
+// V2.2: Added indirect addressing, improved organization and formatting
 
 //-----------------------------
     
@@ -23,7 +24,7 @@
     
     PSECT absdata,abs,ovrld
     
-    displayReg EQU	PORTA
+    displayReg EQU	0x60
     numberReg EQU	0x30
     testReg1 EQU	0x40
     testReg2 EQU	0x41
@@ -72,16 +73,16 @@ _initialize:
     CLRF	numberReg
     MOVLW	0x00
     MOVWF	STATUS
+    
+    MOVLW	0x01
+    MOVWF	testReg1
+    MOVLW	0x00
+    MOVWF	testReg2	     ;testReg1 = upButton, testReg2 = downButton
+    MOVLW	0x00
+    MOVWF	numberReg
     GOTO	_start
     
 _start:
-    MOVLW   0x00
-    MOVWF   testReg1
-    MOVLW   0x01
-    MOVWF   testReg2	     ;testReg1 = upButton, testReg2 = downButton
-    MOVLW   0x00
-    MOVWF   numberReg
-   
     MOVF	testReg1,W
     ANDWF	testReg2,0	;up and down pressed? logical AND resut saved to WREG, move to 0x42 (resetReg)
     MOVWF	resetReg
@@ -89,18 +90,44 @@ _start:
     MOVWF	STATUS
     BTFSC	resetReg,0
     CLRF	numberReg
-    BZ		_numChange	;branch if numReg gets cleared to 0
+    BZ		_bitClear	;branch if numReg gets cleared to 0
     
     BTFSC	testReg1,0
     INCF	numberReg
     BTFSC	testReg2,0
     DECF	numberReg
-    GOTO	_numChange
+    GOTO	_bitClear
     
 
-_numChange:
+_bitClear:
     BCF		numberReg,7
     BCF		numberReg,6
     BCF		numberReg,5
     BCF		numberReg,4
+    GOTO	_compareLoopStart
+    
+    
+_compareLoopStart:
+    MOVLW	0x00
+    CPFSEQ	numberReg
+    GOTO	_compareLoop
+    GOTO	_numChange
+_compareLoop:
+    INCF	WREG
+    CPFSEQ	numberReg
+    GOTO	_compareLoop
+    GOTO	_numChange
+    
+    
+_numChange:
+    MOVWF	FSR0
+    MOVFF	INDF0,displayReg
+    
+
+    GOTO	_start
+    
+;    GOTO	_delay
+    
+    
+_delay:
     
