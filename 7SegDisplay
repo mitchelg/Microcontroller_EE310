@@ -16,6 +16,7 @@
 // V2.2: Added indirect addressing, improved organization and formatting
 // V2.3: Added delay loop
 // V2.3.1: Removed testing code, organization
+// V2.4: Revised start branch, implemented hardware-tied registers
 
 //-----------------------------
     
@@ -26,9 +27,10 @@
     
     PSECT absdata,abs,ovrld
     
-    displayReg EQU	0x60
+    displayReg EQU	PORTA
     numberReg EQU	0x30
     resetReg EQU	0x42
+    referenceReg EQU	0x43
     outerLoop EQU	0x50
     innerLoop EQU	0x51
 
@@ -127,25 +129,37 @@ _initialize:
     MOVLW	numF
     MOVWF	REG0F
     
+    MOVLW	0x02
+    MOVWF	referenceReg
+    
     CLRF	numberReg
+    CLRF	displayReg
+    CLRF	resetReg
+    CLRF	outerLoop
+    CLRF	innerLoop
     GOTO	_compareLoopStart
     
     
 _start:
-    MOVF	upButton,W
-    ANDWF	downButton,0	;up and down pressed? logical AND resut saved to WREG, move to 0x42 (resetReg)
-    MOVWF	resetReg
-    MOVLW	0x00
-    MOVWF	STATUS
-    BTFSC	resetReg,0
-    CLRF	numberReg
-    BZ		_bitClear	;branch if numReg gets cleared to 0
-    
-    BTFSC	upButton,0
+    CLRF	WREG
+    BTFSC	upButton
+    ADDLW	0x01
+    BTFSC	downButton
+    ADDLW	0x01
+    CPFSEQ	referenceReg
+    GOTO	_incDec
+    GOTO	_reset
+
+_incDec:
+    BTFSC	upButton
     INCF	numberReg
-    BTFSC	downButton,0
+    BTFSC	downButton
     DECF	numberReg
     GOTO	_bitClear
+    
+_reset:
+    CLRF	numberReg
+    GOTO	_compareLoopStart
     
 
 _bitClear:
