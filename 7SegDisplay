@@ -15,6 +15,7 @@
 // V2.1: Added pressed-button behavior, value comparisons, more initialization
 // V2.2: Added indirect addressing, improved organization and formatting
 // V2.3: Added delay loop
+// V2.3.1: Removed testing code, organization
 
 //-----------------------------
     
@@ -27,15 +28,10 @@
     
     displayReg EQU	0x60
     numberReg EQU	0x30
-    testReg1 EQU	0x40
-    testReg2 EQU	0x41
     resetReg EQU	0x42
-    outerLoop equ	0x50
-    innerLoop equ	0x51
- 
-    #define upButton	PORTD,0
-    #define downButton	PORTD,1
-    
+    outerLoop EQU	0x50
+    innerLoop EQU	0x51
+
     REG00 EQU		0x00
     REG01 EQU		0x01
     REG02 EQU		0x02
@@ -54,11 +50,8 @@
     REG0F EQU		0x0F
  
  
- 
- 
- 
- 
- 
+    #define upButton	PORTD,0
+    #define downButton	PORTD,1
 
     #define num0    0x3F
     #define num1    0x06
@@ -81,6 +74,7 @@
     GOTO        _initialize
     ORG          20h
     
+    
 _initialize:
     BANKSEL	PORTA
     CLRF	PORTA		
@@ -97,8 +91,6 @@ _initialize:
     BANKSEL	TRISD
     MOVLW	0x03
     MOVWF	TRISD
-    
-    CLRF	numberReg
     MOVLW	0x00
     MOVWF	STATUS
     
@@ -135,18 +127,13 @@ _initialize:
     MOVLW	numF
     MOVWF	REG0F
     
+    CLRF	numberReg
+    GOTO	_compareLoopStart
     
-    MOVLW	0x01
-    MOVWF	testReg1
-    MOVLW	0x00
-    MOVWF	testReg2	     ;testReg1 = upButton, testReg2 = downButton
-    MOVLW	0x08
-    MOVWF	numberReg
-    GOTO	_start
     
 _start:
-    MOVF	testReg1,W
-    ANDWF	testReg2,0	;up and down pressed? logical AND resut saved to WREG, move to 0x42 (resetReg)
+    MOVF	upButton,W
+    ANDWF	downButton,0	;up and down pressed? logical AND resut saved to WREG, move to 0x42 (resetReg)
     MOVWF	resetReg
     MOVLW	0x00
     MOVWF	STATUS
@@ -154,9 +141,9 @@ _start:
     CLRF	numberReg
     BZ		_bitClear	;branch if numReg gets cleared to 0
     
-    BTFSC	testReg1,0
+    BTFSC	upButton,0
     INCF	numberReg
-    BTFSC	testReg2,0
+    BTFSC	downButton,0
     DECF	numberReg
     GOTO	_bitClear
     
@@ -197,10 +184,5 @@ _delayInner:
     GOTO    _delayInner
 _delayOuter:
     DECF    outerLoop
-    BZ	    _testBreak
+    BZ	    _start
     GOTO    _delayInner
-    
-_testBreak:
-    MOVLW   0x30
-    GOTO    _start
-    
