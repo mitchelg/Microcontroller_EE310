@@ -14,6 +14,7 @@
 // V1.1: Added constants and definitions, organization
 // V2.1: Added pressed-button behavior, value comparisons, more initialization
 // V2.2: Added indirect addressing, improved organization and formatting
+// V2.3: Added delay loop
 
 //-----------------------------
     
@@ -29,8 +30,35 @@
     testReg1 EQU	0x40
     testReg2 EQU	0x41
     resetReg EQU	0x42
+    outerLoop equ	0x50
+    innerLoop equ	0x51
+ 
     #define upButton	PORTD,0
     #define downButton	PORTD,1
+    
+    REG00 EQU		0x00
+    REG01 EQU		0x01
+    REG02 EQU		0x02
+    REG03 EQU		0x03
+    REG04 EQU		0x04
+    REG05 EQU		0x05
+    REG06 EQU		0x06
+    REG07 EQU		0x07
+    REG08 EQU		0x08
+    REG09 EQU		0x09
+    REG0A EQU		0x0A
+    REG0B EQU		0x0B
+    REG0C EQU		0x0C
+    REG0D EQU		0x0D
+    REG0E EQU		0x0E
+    REG0F EQU		0x0F
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
     #define num0    0x3F
     #define num1    0x06
@@ -74,11 +102,45 @@ _initialize:
     MOVLW	0x00
     MOVWF	STATUS
     
+    MOVLW	num0
+    MOVWF	REG00
+    MOVLW	num1
+    MOVWF	REG01
+    MOVLW	num2
+    MOVWF	REG02
+    MOVLW	num3
+    MOVWF	REG03
+    MOVLW	num4
+    MOVWF	REG04
+    MOVLW	num5
+    MOVWF	REG05
+    MOVLW	num6
+    MOVWF	REG06
+    MOVLW	num7
+    MOVWF	REG07
+    MOVLW	num8
+    MOVWF	REG08
+    MOVLW	num9
+    MOVWF	REG09
+    MOVLW	numA
+    MOVWF	REG0A
+    MOVLW	numB
+    MOVWF	REG0B
+    MOVLW	numC
+    MOVWF	REG0C
+    MOVLW	numD
+    MOVWF	REG0D
+    MOVLW	numE
+    MOVWF	REG0E
+    MOVLW	numF
+    MOVWF	REG0F
+    
+    
     MOVLW	0x01
     MOVWF	testReg1
     MOVLW	0x00
     MOVWF	testReg2	     ;testReg1 = upButton, testReg2 = downButton
-    MOVLW	0x00
+    MOVLW	0x08
     MOVWF	numberReg
     GOTO	_start
     
@@ -122,12 +184,23 @@ _compareLoop:
 _numChange:
     MOVWF	FSR0
     MOVFF	INDF0,displayReg
-    
-
-    GOTO	_start
-    
-;    GOTO	_delay
+    GOTO	_delayStart
     
     
-_delay:
+_delayStart:
+    MOVLW   0xFF
+    MOVWF   outerLoop
+    MOVFF   outerLoop,innerLoop
+_delayInner:
+    DECF    innerLoop
+    BZ	    _delayOuter
+    GOTO    _delayInner
+_delayOuter:
+    DECF    outerLoop
+    BZ	    _testBreak
+    GOTO    _delayInner
+    
+_testBreak:
+    MOVLW   0x30
+    GOTO    _start
     
