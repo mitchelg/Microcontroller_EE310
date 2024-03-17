@@ -11,6 +11,7 @@
 // Versions:
 // V0.1: File created
 // V1.0: Added comment header, initialization
+// V1.1: Added constants and definitons, organization
 
 //-----------------------------
     
@@ -21,4 +22,29 @@
     
     PSECT absdata,abs,ovrld
     
+    numberReg EQU	0x07
+    upButtonReg EQU	0x10
+    downButtonReg EQU	0x11
 
+    #define num0    0x3F
+    #define num1    0x06
+    #define num2    0x5B
+    #define num3    0x4F
+    #define num4    0x66
+    #define num5    0x6D
+    #define num6    0x7D
+    #define num7    0x07
+    #define num8    0x7F
+    #define num9    0x6F
+    #define numA    0x77
+    #define numB    0x7C
+    #define numC    0x58
+    #define numD    0x5E
+    #define numE    0x79
+    #define numF    0x71
+
+    ORG          0h
+    GOTO        _start
+    ORG          20h
+    
+    
