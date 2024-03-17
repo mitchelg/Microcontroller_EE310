@@ -11,7 +11,8 @@
 // Versions:
 // V0.1: File created
 // V1.0: Added comment header, initialization
-// V1.1: Added constants and definitons, organization
+// V1.1: Added constants and definitions, organization
+// V2.1: Added pressed-button behavior, value comparisons, more initialization
 
 //-----------------------------
     
@@ -22,9 +23,13 @@
     
     PSECT absdata,abs,ovrld
     
-    numberReg EQU	0x07
-    upButtonReg EQU	0x10
-    downButtonReg EQU	0x11
+    displayReg EQU	PORTA
+    numberReg EQU	0x30
+    testReg1 EQU	0x40
+    testReg2 EQU	0x41
+    resetReg EQU	0x42
+    #define upButton	PORTD,0
+    #define downButton	PORTD,1
 
     #define num0    0x3F
     #define num1    0x06
@@ -44,7 +49,58 @@
     #define numF    0x71
 
     ORG          0h
-    GOTO        _start
+    GOTO        _initialize
     ORG          20h
     
+_initialize:
+    BANKSEL	PORTA
+    CLRF	PORTA		
+    BANKSEL	ANSELA
+    CLRF	ANSELA
+    BANKSEL	TRISA
+    MOVLW	0x00
+    MOVWF	TRISA
+    
+    BANKSEL	PORTD
+    CLRF	PORTD		
+    BANKSEL	ANSELD
+    CLRF	ANSELD
+    BANKSEL	TRISD
+    MOVLW	0x03
+    MOVWF	TRISD
+    
+    CLRF	numberReg
+    MOVLW	0x00
+    MOVWF	STATUS
+    GOTO	_start
+    
+_start:
+    MOVLW   0x00
+    MOVWF   testReg1
+    MOVLW   0x01
+    MOVWF   testReg2	     ;testReg1 = upButton, testReg2 = downButton
+    MOVLW   0x00
+    MOVWF   numberReg
+   
+    MOVF	testReg1,W
+    ANDWF	testReg2,0	;up and down pressed? logical AND resut saved to WREG, move to 0x42 (resetReg)
+    MOVWF	resetReg
+    MOVLW	0x00
+    MOVWF	STATUS
+    BTFSC	resetReg,0
+    CLRF	numberReg
+    BZ		_numChange	;branch if numReg gets cleared to 0
+    
+    BTFSC	testReg1,0
+    INCF	numberReg
+    BTFSC	testReg2,0
+    DECF	numberReg
+    GOTO	_numChange
+    
+
+_numChange:
+    BCF		numberReg,7
+    BCF		numberReg,6
+    BCF		numberReg,5
+    BCF		numberReg,4
     
