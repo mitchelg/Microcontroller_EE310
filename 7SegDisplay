@@ -17,7 +17,7 @@
 // V2.3: Added delay loop
 // V2.3.1: Removed testing code, organization
 // V2.4: Revised start branch, implemented hardware-tied registers
-
+// V2.4.1: Added comments, optimized code, organization
 //-----------------------------
     
     
@@ -27,14 +27,13 @@
     
     PSECT absdata,abs,ovrld
     
-    displayReg EQU	PORTA
-    numberReg EQU	0x30
-    resetReg EQU	0x42
-    referenceReg EQU	0x43
-    outerLoop EQU	0x50
-    innerLoop EQU	0x51
+    displayReg EQU	PORTA		;register that displays 
+    numberReg EQU	0x30		;holds current value of number to display
+    referenceReg EQU	0x40		;holds value of 2h
+    outerLoop EQU	0x50		;outer loop for delay
+    innerLoop EQU	0x51		;inner loop for delay
 
-    REG00 EQU		0x00
+    REG00 EQU		0x00		;defining all registers
     REG01 EQU		0x01
     REG02 EQU		0x02
     REG03 EQU		0x03
@@ -52,10 +51,11 @@
     REG0F EQU		0x0F
  
  
-    #define upButton	PORTD,0
-    #define downButton	PORTD,1
-
-    #define num0    0x3F
+    #define upButton	    PORTD,0	;press button to increment displayed number
+    #define downButton	    PORTD,1	;press button to decrement displayed number
+    #define referenceSum    0x02
+    
+    #define num0    0x3F		;defining all numbers to be displayed by SSD
     #define num1    0x06
     #define num2    0x5B
     #define num3    0x4F
@@ -77,13 +77,13 @@
     ORG          20h
     
     
-_initialize:
+_initialize:				;general initialization
     BANKSEL	PORTA
     CLRF	PORTA		
     BANKSEL	ANSELA
     CLRF	ANSELA
     BANKSEL	TRISA
-    MOVLW	0x00
+    MOVLW	0x00			;setting up Port A as output
     MOVWF	TRISA
     
     BANKSEL	PORTD
@@ -92,11 +92,11 @@ _initialize:
     CLRF	ANSELD
     BANKSEL	TRISD
     MOVLW	0x03
-    MOVWF	TRISD
+    MOVWF	TRISD			;setting up Port D as input, clearing Status reg.
     MOVLW	0x00
     MOVWF	STATUS
     
-    MOVLW	num0
+    MOVLW	num0			;loading all SSD number values into registers 0x0[F:0]
     MOVWF	REG00
     MOVLW	num1
     MOVWF	REG01
@@ -129,66 +129,53 @@ _initialize:
     MOVLW	numF
     MOVWF	REG0F
     
-    MOVLW	0x02
+    MOVLW	referenceSum		;loading reference value for reset functionality
     MOVWF	referenceReg
     
-    CLRF	numberReg
+    CLRF	numberReg		;clearing all file registers
     CLRF	displayReg
-    CLRF	resetReg
     CLRF	outerLoop
     CLRF	innerLoop
-    GOTO	_compareLoopStart
+    GOTO	_numChange		;SSD will display number 0 before reaching start branch
     
     
 _start:
-    CLRF	WREG
-    BTFSC	upButton
+    CLRF	WREG		    ;WREG = 0
+    BTFSC	upButton	    ;if upButton pressed, add 1 to WREG
     ADDLW	0x01
-    BTFSC	downButton
+    BTFSC	downButton	    ;if downButton pressed, add 1 to WREG
     ADDLW	0x01
-    CPFSEQ	referenceReg
-    GOTO	_incDec
+    CPFSEQ	referenceReg	    ;if WREG total sum = 2, both buttons pressed, start reset function
+    GOTO	_incDec		    ;otherwise, test buttons individually
     GOTO	_reset
 
 _incDec:
-    BTFSC	upButton
+    BTFSC	upButton	    ;if upButton pressed, add 1 to numberReg
     INCF	numberReg
-    BTFSC	downButton
+    BTFSC	downButton	    ;otherwise if downButton pressed, subtract 1 from numberReg
     DECF	numberReg
     GOTO	_bitClear
     
 _reset:
     CLRF	numberReg
-    GOTO	_compareLoopStart
+    GOTO	_numChange
     
 
-_bitClear:
+_bitClear:	;removing upper nibble of numberReg as SSD only displays 1 digit
     BCF		numberReg,7
     BCF		numberReg,6
     BCF		numberReg,5
     BCF		numberReg,4
-    GOTO	_compareLoopStart
-    
-    
-_compareLoopStart:
-    MOVLW	0x00
-    CPFSEQ	numberReg
-    GOTO	_compareLoop
-    GOTO	_numChange
-_compareLoop:
-    INCF	WREG
-    CPFSEQ	numberReg
-    GOTO	_compareLoop
     GOTO	_numChange
     
     
-_numChange:
-    MOVWF	FSR0
-    MOVFF	INDF0,displayReg
+_numChange:	;value of numberReg points at appropriate file register using indirect addressing
+    MOVFF	numberReg,FSR0
+    MOVFF	INDF0,displayReg	;loading value at FSR pointer into SSD
     GOTO	_delayStart
     
     
-_delayStart:
+_delayStart:		;delay loop between SSD number changes, approx. 260 ms
     MOVLW   0xFF
     MOVWF   outerLoop
     MOVFF   outerLoop,innerLoop
@@ -198,5 +185,6 @@ _delayInner:
     GOTO    _delayInner
 _delayOuter:
     DECF    outerLoop
-    BZ	    _start
+    BZ	    _start	;program restarts
     GOTO    _delayInner
+END
