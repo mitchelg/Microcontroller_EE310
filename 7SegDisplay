@@ -19,6 +19,7 @@
 // V2.4: Revised start branch, implemented hardware-tied registers
 // V2.4.1: Added comments, optimized code, organization
 // V2.4.2: Minor formatting changes, more comments
+// V2.4.3: Added required CALL function to delay loop
 //-----------------------------
     
     
@@ -175,7 +176,8 @@ _bitClear:	;removing upper nibble of numberReg as SSD only displays 1 digit
 _numChange:	;value of numberReg points at appropriate file register using indirect addressing
     MOVFF	numberReg,FSR0
     MOVFF	INDF0,displayReg	;loading value at FSR pointer into SSD
-    GOTO	_delayStart
+    CALL	_delayStart
+    GOTO	_start
     
     
 _delayStart:		;delay loop between SSD number changes, approx. 260 ms
@@ -188,6 +190,8 @@ _delayInner:
     GOTO    _delayInner
 _delayOuter:
     DECF    outerLoop
-    BZ	    _start	;program restarts
+    BZ	    _restart
     GOTO    _delayInner
+_restart:
+    RETURN
 END
