@@ -18,6 +18,7 @@
 // V2.3.1: Removed testing code, organization
 // V2.4: Revised start branch, implemented hardware-tied registers
 // V2.4.1: Added comments, optimized code, organization
+// V2.4.2: Minor formatting changes, more comments
 //-----------------------------
     
     
@@ -27,7 +28,7 @@
     
     PSECT absdata,abs,ovrld
     
-    displayReg EQU	PORTA		;register that displays 
+    displayReg EQU	PORTA		;output register that displays incrementing/decrementing number
     numberReg EQU	0x30		;holds current value of number to display
     referenceReg EQU	0x40		;holds value of 2h
     outerLoop EQU	0x50		;outer loop for delay
@@ -149,12 +150,14 @@ _start:
     GOTO	_incDec		    ;otherwise, test buttons individually
     GOTO	_reset
 
+    
 _incDec:
     BTFSC	upButton	    ;if upButton pressed, add 1 to numberReg
     INCF	numberReg
     BTFSC	downButton	    ;otherwise if downButton pressed, subtract 1 from numberReg
     DECF	numberReg
     GOTO	_bitClear
+    
     
 _reset:
     CLRF	numberReg
